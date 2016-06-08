@@ -1,0 +1,193 @@
+
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "This is template for the Higher Ed community to use when provisioning end user accounts from a Enterprise managed service.",
+    "Metadata": {
+
+    },
+    "Parameters": {
+    
+    },
+    "Mappings": {
+
+    },
+    "Conditions": {
+
+    },
+    "Resources": {
+
+      "MyVPC": {
+        "Type": "AWS::EC2::VPC",
+        "Properties": {
+          "CidrBlock": "----/--",
+          "Tags": ["-"]
+        }
+      },
+
+      "MyRouteTable" : {
+        "Type" : "AWS::EC2::RouteTable",
+        "Properties" : {
+            "VpcId" : "MyVPC",
+            "Tags" : [ "-" ]
+        }
+      }, 
+
+      "MyVPCRoute" : {
+        "Type" : "AWS::EC2::Route",
+        "Properties" : {
+          "DestinationCidrBlock" : "----/--",
+          "GatewayId" : "MyVPNGateway",
+          "InstanceId" : "-",
+          "NatGatewayId" : "-",
+          "NetworkInterfaceId" : "-",
+          "RouteTableId" : "MyRouteTable",
+          "VpcPeeringConnectionId" : "-"
+        }
+      },
+
+      "MyVPNGateway": {
+        "Type": "AWS::EC2::VPNGateway",
+        "Properties": {
+          "Type": "ipsec.1",
+          "Tags": ["--"]
+        }
+      },
+
+      "MyCustomerGateway" : {
+        "Type" : "AWS::EC2::CustomerGateway",
+        "Properties" : {
+            "BgpAsn" : "-",
+            "IpAddress" : "-",
+            "Tags" :  [ "-" ],
+            "Type" : "ipsec.1"
+        }
+      },  
+      
+      "MyVPNConnection" : {
+        "Type" : "AWS::EC2::VPNConnection",
+        "Properties" : {
+            "Type" : "ipsec.1",
+            "CustomerGatewayId" : "MyCustomerGateway",
+            "StaticRoutesOnly" : "true",
+            "Tags" :  [ "--"],
+            "VpnGatewayId" : "MyVPNGateway"
+        }
+      },  
+
+      "MyVPNConnectionRoute" : {
+        "Type" : "AWS::EC2::VPNConnectionRoute",
+        "Properties" : {
+            "DestinationCidrBlock" : "----/--",
+            "VpnConnectionId" : "MyVPNConnection"
+        }
+      },
+      
+      "MyVPNRoutePropogation" : {
+        "Type" : "AWS::EC2::VPNGatewayRoutePropagation",
+        "Properties" : {
+            "RouteTableIds" : [ "MyRouteTable" ],
+            "VpnGatewayId" : "MyVPNGateway"
+        }
+      }, 
+
+      "MySecurityGroup" : {
+        "Type" : "AWS::EC2::SecurityGroup",
+        "Properties" : {
+          "GroupDescription" : "-",
+          "SecurityGroupIngress" : [ 
+            { "IpProtocol" : "[tcp|udp|ip]", "FromPort" : "-", "ToPort" : "-", "CidrIp" : "-" }
+          ],
+          "VpcId" : "MyVPC",
+          "Tags" :  ["--"]
+        }
+      },
+      
+      "MyUserPolicy": {
+         "Type": "AWS::IAM::Policy",
+         "Properties": {
+            "Groups" : [ "MyUserGroup" ],
+            "PolicyDocument" : {},
+            "PolicyName" : "",
+            "Roles" : [ "" ],
+            "Users" : [ "" ]
+         }
+      },
+            
+      "MyUserGroup": {
+         "Type": "AWS::IAM::Group",
+         "Properties": {
+            "Path": "",
+            "Policies": [ "" ]
+         }
+      },
+
+      "MyUser": {
+         "Type": "AWS::IAM::User",
+         "Properties": {
+            "Path": "/",
+            "Groups": [ "MyUserGroup" ],
+            "LoginProfile": { "Password" : "" },
+            "Policies": [  ]
+         }
+      },
+      
+      "CloudTrailBucket": {
+        "Type": "AWS::S3::Bucket",
+        "Properties": {
+          "AccessControl": "Private",
+          "BucketName": "CloudTrailBucket",
+          "CorsConfiguration": {},
+          "LifecycleConfiguration": {},
+          "NotificationConfiguration": {},
+          "VersioningConfiguration": {},
+          "WebsiteConfiguration": {},
+          "Tags": [] 
+        }
+      },
+      
+      "cloudTrail": {
+        "Type": "AWS::CloudTrail::Trail",
+        "Properties": {
+          "S3BucketName": "CloudTrailBucket",
+          "IncludeGlobalServiceEvents": "true",
+          "IsLogging": "true",
+          "S3KeyPrefix": "",
+          "SnsTopicName": ""
+        }
+      },
+      
+      "SecurityOfficePolicy": {
+         "Type": "AWS::IAM::Policy",
+         "Properties": {
+            "Groups" : [ "SecurityOfficeGroup" ],
+            "PolicyDocument" : {},
+            "PolicyName" : "",
+            "Roles" : [ "" ],
+            "Users" : [ "" ]
+         }
+      },
+      
+      "SecurityOfficeGroup": {
+         "Type": "AWS::IAM::Group",
+         "Properties": {
+            "Path": "",
+            "Policies": [ "SecurityOfficePolicy" ]
+         }
+      },
+      
+      "SecurityOfficeUser": {
+         "Type": "AWS::IAM::User",
+         "Properties": {
+            "Path": "/",
+            "Groups": [ "SecurityOfficeGroup" ],
+            "LoginProfile": { "Password" : "" },
+            "Policies": [  ]
+         }
+      }
+
+    },
+
+    "Outputs": {
+
+    }
+}
